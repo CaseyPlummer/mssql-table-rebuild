@@ -1,2 +1,52 @@
--- Deprecated. Just use STRING_SPLIT ( string , separator ) instead.
--- https://docs.microsoft.com/en-us/sql/t-sql/functions/string-split-transact-sql?view=sql-server-ver15
+/********************************************************************************************************
+Description:    Splits a string using the specified delimiter. Returns a table where each row contains
+                the position and value of the item.
+*********************************************************************************************************/
+CREATE FUNCTION [dbo].[Split] (
+     @Delimiter     NVARCHAR(32) = ','
+    ,@Text          NVARCHAR(max))
+RETURNS @Results TABLE (
+     [Position]     INT IDENTITY(1,1) NOT NULL
+    ,[Value]        NVARCHAR(MAX)
+)
+AS
+BEGIN
+
+-- Validate parameters
+SET @Delimiter=ISNULL(@Delimiter,',')
+
+-- Escape XML characters
+SET @Delimiter = REPLACE(@Delimiter, '"', '&quot;')
+SET @Delimiter = REPLACE(@Delimiter, '''', '&apos;')
+SET @Delimiter = REPLACE(@Delimiter, '<', '&lt;')
+SET @Delimiter = REPLACE(@Delimiter, '>', '&gt;')
+SET @Delimiter = REPLACE(@Delimiter, '&', '&amp;')
+SET @Text = REPLACE(@Text, '"', '&quot;')
+SET @Text = REPLACE(@Text, '''', '&apos;')
+SET @Text = REPLACE(@Text, '<', '&lt;')
+SET @Text = REPLACE(@Text, '>', '&gt;')
+SET @Text = REPLACE(@Text, '&', '&amp;')
+
+DECLARE @xml XML
+SET @XML = N'<root><r>' + REPLACE(@Text, @Delimiter, '</r><r>') + '</r></root>'
+
+INSERT INTO @Results([value])
+SELECT r.value('.','NVARCHAR(MAX)') as Item
+FROM @xml.nodes('//root/r') AS RECORDS(r)
+
+RETURN
+END
+
+-- Testing code
+ --DROP FUNCTION [dbo].[Split]
+ --SELECT * FROM [dbo].[Split](NULL, NULL)
+ --SELECT * FROM [dbo].[Split](NULL, 'First,Second,Third,Fourth')
+ --SELECT * FROM [dbo].[Split](default, 'First,Second,Third,Fourth')
+ --SELECT * FROM [dbo].[Split](default, 'First,,Third,,Fifth')
+ --SELECT * FROM [dbo].[Split]('|', 'First|Second|Third|Fourth')
+ --SELECT * FROM [dbo].[Split]('<', 'First<Second<Third<Fourth')
+ --SELECT * FROM [dbo].[Split]('>', 'First>Second>Third>Fourth')
+ --SELECT * FROM [dbo].[Split]('"', 'First"Second"Third"Fourth')
+ --SELECT * FROM [dbo].[Split]('''', 'First''Second''Third''Fourth')
+ --SELECT * FROM [dbo].[Split]('&', 'First&Second&Third&Fourth')
+
