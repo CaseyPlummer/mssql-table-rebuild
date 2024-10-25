@@ -16,16 +16,16 @@ BEGIN
 SET @Delimiter=ISNULL(@Delimiter,',')
 
 -- Escape XML characters
+SET @Delimiter = REPLACE(@Delimiter, '&', '&amp;')
 SET @Delimiter = REPLACE(@Delimiter, '"', '&quot;')
 SET @Delimiter = REPLACE(@Delimiter, '''', '&apos;')
 SET @Delimiter = REPLACE(@Delimiter, '<', '&lt;')
 SET @Delimiter = REPLACE(@Delimiter, '>', '&gt;')
-SET @Delimiter = REPLACE(@Delimiter, '&', '&amp;')
+SET @Text = REPLACE(@Text, '&', '&amp;')
 SET @Text = REPLACE(@Text, '"', '&quot;')
 SET @Text = REPLACE(@Text, '''', '&apos;')
 SET @Text = REPLACE(@Text, '<', '&lt;')
 SET @Text = REPLACE(@Text, '>', '&gt;')
-SET @Text = REPLACE(@Text, '&', '&amp;')
 
 DECLARE @xml XML
 SET @XML = N'<root><r>' + REPLACE(@Text, @Delimiter, '</r><r>') + '</r></root>'
@@ -49,4 +49,6 @@ END
  --SELECT * FROM [dbo].[Split]('"', 'First"Second"Third"Fourth')
  --SELECT * FROM [dbo].[Split]('''', 'First''Second''Third''Fourth')
  --SELECT * FROM [dbo].[Split]('&', 'First&Second&Third&Fourth')
+ --SELECT * FROM [dbo].[Split]('&', 'First&"Second Column"&Third "3rd"&Fourth');
+
 
